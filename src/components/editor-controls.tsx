@@ -86,7 +86,7 @@ const EditorControls: React.FC = () => {
       <Badge
         variant="outline"
         onClick={() => setIsBold(!isBold)}
-        className={isBold ? "text-purple-600 bg-purple-300  ring-1 ring-purple-600" : "cursor-pointer text-white bg-neutral-800 hover:bg-neutral-700"}
+        className={isBold ? "text-purple-500 bg-purple-500/40 cursor-pointer ring-1 ring-purple-600" : "cursor-pointer text-white bg-neutral-800 hover:bg-neutral-700"}
       >
         Bold
       </Badge>

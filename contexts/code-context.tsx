@@ -4,7 +4,7 @@ import { createContext, useContext, useState, type ReactNode } from "react"
 // 1. Define context type
 type CodeContextType = {
   code: string
-  setCode: (value: string) => void
+  setCode: React.Dispatch<React.SetStateAction<string>>;
 }
 
 // 2. Create context

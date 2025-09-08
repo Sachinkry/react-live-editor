@@ -16,7 +16,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange }) => {
   ]
 
   return (
-    <div className="grid grid-cols-4 gap-1 p-2 bg-rose-300">
+    <div className="grid grid-cols-4 ">
       {colors.map((color) => (
         <button
           key={color}
