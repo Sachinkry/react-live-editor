@@ -1,8 +1,18 @@
+// src/utils/updateMultipleEdits.ts
 import * as BabelParser from "@babel/parser";
 import traverse from "@babel/traverse";
 import generate from "@babel/generator";
 import * as t from "@babel/types";
 
+export interface Edit {
+  tag: string;
+  index: number;
+  text: string;
+}
+
+/**
+ * Update a single JSX element's text content
+ */
 export function updateTextInCode(
   code: string,
   tag: string,
@@ -15,36 +25,33 @@ export function updateTextInCode(
   });
 
   let occurrence = 0;
-  let updated = false;
 
   traverse(ast, {
     JSXElement(path) {
-      const opening = path.node.openingElement.name;
-      if (opening.type === "JSXIdentifier" && opening.name === tag.toLowerCase()) {
+      const opening = path.node.openingElement;
+      const nameNode = opening.name;
+
+      if (t.isJSXIdentifier(nameNode) && nameNode.name === tag) {
         if (occurrence === index) {
-          // Filter and update only JSXText or JSXExpressionContainer with text
-          path.node.children = path.node.children.map((child) => {
-            if (t.isJSXText(child)) {
-              return t.jsxText(newText);
-            } else if (
-              t.isJSXExpressionContainer(child) &&
-              t.isStringLiteral(child.expression)
-            ) {
-              return t.jsxExpressionContainer(t.stringLiteral(newText));
-            }
-            return child; // Preserve non-text children
-          });
-          updated = true;
+          // replace children with a single text node
+          path.node.children = [t.jsxText(newText)];
+          path.stop(); // done
         }
         occurrence++;
       }
     },
   });
 
-  if (!updated) {
-    console.warn(`No matching ${tag} element found at index ${index}`);
-    return code; // Return original code if no update was made
-  }
+  return generate(ast, { jsescOption: { quotes: "double" } }).code;
+}
 
-  return generate(ast, { retainLines: true }).code;
+/**
+ * Apply multiple edits one by one
+ */
+export function updateMultipleEdits(code: string, edits: Edit[]): string {
+  let newCode = code;
+  for (const e of edits) {
+    newCode = updateTextInCode(newCode, e.tag, e.index, e.text);
+  }
+  return newCode;
 }
