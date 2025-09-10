@@ -55,3 +55,65 @@ export function updateMultipleEdits(code: string, edits: Edit[]): string {
   }
   return newCode;
 }
+
+
+export function updateElementStyles(
+    code: string,
+    tag: string,
+    index: number,
+    styles: {
+      backgroundColor: string;
+      color: string;
+      fontSize: number;
+      fontWeight: string;
+      tag: string;
+    }
+  ): string {
+    const ast = BabelParser.parse(code, {
+      sourceType: "module",
+      plugins: ["jsx", "typescript"],
+    });
+  
+    let occurrence = 0;
+  
+    traverse(ast, {
+      JSXElement(path) {
+        const opening = path.node.openingElement;
+        const nameNode = opening.name;
+  
+        if (t.isJSXIdentifier(nameNode) && nameNode.name === tag) {
+          if (occurrence === index) {
+            const styleAttr = path.node.openingElement.attributes.find(
+              (attr): attr is t.JSXAttribute =>
+                t.isJSXAttribute(attr) &&
+                t.isJSXIdentifier(attr.name) &&
+                attr.name.name === "style"
+            );
+            const styleObj = t.jsxExpressionContainer(
+              t.objectExpression([
+                t.objectProperty(t.identifier("backgroundColor"), t.stringLiteral(styles.backgroundColor)),
+                t.objectProperty(t.identifier("color"), t.stringLiteral(styles.color)),
+                t.objectProperty(t.identifier("fontSize"), t.stringLiteral(`${styles.fontSize}px`)),
+                t.objectProperty(t.identifier("fontWeight"), t.stringLiteral(styles.fontWeight)),
+              ])
+            );
+            if (styleAttr) {
+              styleAttr.value = styleObj;
+            } else {
+              path.node.openingElement.attributes.push(t.jsxAttribute(t.jsxIdentifier("style"), styleObj));
+            }
+            if (nameNode.name !== styles.tag) {
+              path.node.openingElement.name = t.jsxIdentifier(styles.tag);
+              if (path.node.closingElement) {
+                path.node.closingElement.name = t.jsxIdentifier(styles.tag);
+              }
+            }
+            path.stop();
+          }
+          occurrence++;
+        }
+      },
+    });
+  
+    return generate(ast, { jsescOption: { quotes: "double" } }).code;
+  }

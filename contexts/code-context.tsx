@@ -1,10 +1,21 @@
 "use client"
 import { createContext, useContext, useState, type ReactNode } from "react"
 
+
 // 1. Define context type
 type CodeContextType = {
   code: string
   setCode: React.Dispatch<React.SetStateAction<string>>;
+  selectedElement: { tag: string; index: number } | null;
+  setSelectedElement: React.Dispatch<React.SetStateAction<{ tag: string; index: number } | null>>;
+  editorStyles: {
+    fontSize: number;
+    color: string;
+    backgroundColor: string;
+    fontWeight: boolean;
+    tag: string;
+  } | null;
+  setEditorStyles: React.Dispatch<React.SetStateAction<CodeContextType["editorStyles"]>>;
 }
 
 // 2. Create context
@@ -38,10 +49,12 @@ export default function Component() {
 
 export const CodeProvider = ({ children }: { children: ReactNode }) => {
   const [code, setCode] = useState(defaultCode);
+  const [selectedElement, setSelectedElement] = useState<{ tag: string; index: number } | null>(null);
+  const [editorStyles, setEditorStyles] = useState<CodeContextType["editorStyles"]>(null);
 
-  
+
   return (
-    <CodeContext.Provider value={{ code, setCode }}>
+    <CodeContext.Provider value={{ code, setCode, selectedElement, setSelectedElement, editorStyles, setEditorStyles }}>
       {children}
     </CodeContext.Provider>
   );

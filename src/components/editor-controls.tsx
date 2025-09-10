@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useCode } from "../../contexts/code-context";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Button } from "./ui/button";
 import { Command, CommandGroup, CommandItem } from "./ui/command";
 import ColorPicker from "./color-picker";
-import { ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { updateElementStyles } from "@/lib/updateCodeInText";
 
 const EditorControls: React.FC = () => {
-    
+  const { code, setCode, editorStyles, setEditorStyles, selectedElement } = useCode();
   const [selectedHeading, setSelectedHeading] = useState("32px");
   const [bgColor, setBgColor] = useState("#ffffff");
   const [textColor, setTextColor] = useState("#000000");
@@ -16,36 +15,52 @@ const EditorControls: React.FC = () => {
   const [isBold, setIsBold] = useState(false);
 
   const headingOptions = [
-    { value: "32px", label: "H1" },
-    { value: "24px", label: "H2" },
-    { value: "18px", label: "H3" },
-    { value: "16px", label: "H4" },
+    { value: "32px", label: "H1", tag: "h1" },
+    { value: "24px", label: "H2", tag: "h2" },
+    { value: "18px", label: "H3", tag: "h3" },
+    { value: "16px", label: "H4", tag: "h4" },
   ];
 
-//   useEffect(() => {
-//     const updateCode = `
-//       const Component = () => (
-//         <${selectedHeading} style={{ 
-//           backgroundColor: "${bgColor}", 
-//           color: "${textColor}", 
-//           fontSize: "${fontSize}px", 
-//           fontWeight: ${isBold ? "bold" : "normal"}
-//         }}>
-//           Preview Text
-//         </${selectedHeading}>
-//       );
-//       export default Component;
-//     `;
-//     setCode(updateCode);
-//   }, [selectedHeading, bgColor, textColor, fontSize, isBold, setCode]);
+  useEffect(() => {
+    if (editorStyles) {
+      setSelectedHeading(
+        headingOptions.find(h => h.tag === editorStyles.tag)?.value || "32px"
+      );
+      setBgColor(editorStyles.backgroundColor);
+      setTextColor(editorStyles.color);
+      setFontSize(editorStyles.fontSize);
+      setIsBold(editorStyles.fontWeight);
+    }
+  }, [editorStyles]);
+
+  useEffect(() => {
+    if (selectedElement) {
+      const newTag = headingOptions.find(h => h.value === selectedHeading)?.tag || selectedElement.tag;
+      setEditorStyles({
+        fontSize,
+        color: textColor,
+        backgroundColor: bgColor,
+        fontWeight: isBold,
+        tag: newTag,
+      });
+      const newCode = updateElementStyles(code, selectedElement.tag, selectedElement.index, {
+        backgroundColor: bgColor,
+        color: textColor,
+        fontSize,
+        fontWeight: isBold ? "bold" : "normal",
+        tag: newTag,
+      });
+      setCode(newCode);
+    }
+  }, [selectedHeading, bgColor, textColor, fontSize, isBold, selectedElement]);
 
   return (
-    <div className="flex items-center space-x-2 text-sm ">
+    <div className="flex items-center space-x-2 text-sm">
       <Popover>
         <PopoverTrigger asChild>
           <Badge
             variant="outline"
-            className=" text-xs cursor-pointer justify-between bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700"
+            className="text-xs cursor-pointer justify-between bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700"
           >
             {headingOptions.find(h => h.value === selectedHeading)?.label || "Select Heading"}
           </Badge>
@@ -57,7 +72,7 @@ const EditorControls: React.FC = () => {
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={() => {}}
+                  onSelect={() => setSelectedHeading(option.value)}
                   className="text-white hover:bg-neutral-700 cursor-pointer text-xs"
                 >
                   {option.label}
@@ -98,7 +113,6 @@ const EditorControls: React.FC = () => {
         max="72"
         className="w-16 p-1 text-xs bg-neutral-800 text-white border hover:bg-neutral-700 border-neutral-700 rounded-md"
       />
-      
     </div>
   );
 };

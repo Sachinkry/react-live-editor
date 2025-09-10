@@ -20,33 +20,34 @@ const iframeHTML = `
       let root = ReactDOM.createRoot(rootEl);
 
       // inside your iframeHTML string — replace the makeEditable function with this block
-function makeEditable() {
-  // collect all elements under #root, but only make *leaf* elements editable
-  const nodes = Array.from(rootEl.querySelectorAll("#root *"));
-  const counters = Object.create(null);
+      function makeEditable() {
+        // collect all elements under #root, but only make *leaf* elements editable
+        const nodes = Array.from(rootEl.querySelectorAll("#root *"));
+        const counters = Object.create(null);
 
-  nodes.forEach((el) => {
-    // SKIP elements that contain element children — only allow true leaf elements.
-    if (el.children.length > 0) return;
+        nodes.forEach((el) => {
+          // SKIP elements that contain element children — only allow true leaf elements.
+          if (el.children.length > 0) return;
 
-    if (!el.innerText.trim()) return;
-    const tag = el.tagName.toLowerCase();
-    counters[tag] = (counters[tag] || 0) + 1;
-    const index = counters[tag] - 1;
+          if (!el.innerText.trim()) return;
+          const tag = el.tagName.toLowerCase();
+          counters[tag] = (counters[tag] || 0) + 1;
+          const index = counters[tag] - 1;
 
-    el.setAttribute("data-tag", tag);
-    el.setAttribute("data-tag-index", String(index));
-    el.contentEditable = "true";
+          el.setAttribute("data-tag", tag);
+          el.setAttribute("data-tag-index", String(index));
+          el.contentEditable = "true";
 
-    el.addEventListener("input", () => {
-      window.parent.postMessage(
-        { type: "TEXT_EDIT", tag, index, text: el.innerText },
-        "*"
-      );
-    });
-  });
-}
+          el.addEventListener("input", () => {
+            window.parent.postMessage(
+              { type: "TEXT_EDIT", tag, index, text: el.innerText },
+              "*"
+            );
+          });
+        });
+      }
 
+      
 
       window.addEventListener("message", (event) => {
         const code = event.data;
